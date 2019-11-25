@@ -3,7 +3,7 @@ package com.commandExecution.framework.commands.ps
 import com.commandExecution.framework.commands.ps.PsCommand.Ps._
 import com.commandExecution.framework.commands.wc.WcCommand
 import com.commandExecution.framework.commands.wc.WcCommand.Wc.MinWcCommand
-import com.commandExecution.framework.schema.PsAuxResults
+import com.commandExecution.framework.schema.PsAuxResult
 import com.commandExecution.framework.utils.CommandStringBuilder
 
 import scala.collection.mutable
@@ -30,7 +30,7 @@ class PsCommand[Ps <: PsCommand.Ps](commandStrings: Seq[String] = Seq()) {
 
 
     val strings = string.split("\n")
-    val psResults = mutable.ArrayBuffer[PsAuxResults]()
+    val psResults = mutable.ArrayBuffer[PsAuxResult]()
 
     if (strings.length > 2) {
 
@@ -41,7 +41,7 @@ class PsCommand[Ps <: PsCommand.Ps](commandStrings: Seq[String] = Seq()) {
 
             val stringContents = string.split("\\s+")
 
-            psResults += PsAuxResults(stringContents(0),
+            psResults += PsAuxResult(stringContents(0),
               stringContents(1).toLong,
               stringContents(2).toDouble,
               stringContents(3).toDouble,
@@ -80,7 +80,7 @@ class PsCommand[Ps <: PsCommand.Ps](commandStrings: Seq[String] = Seq()) {
   }
 
 
-  def executeWithAux(implicit ev: Ps =:= PsWithAux): ArrayBuffer[PsAuxResults] = {
+  def executeWithAux(implicit ev: Ps =:= PsWithAux): Array[String] = {
 
     var commandSeq: Seq[String] = Seq()
 
@@ -97,7 +97,7 @@ class PsCommand[Ps <: PsCommand.Ps](commandStrings: Seq[String] = Seq()) {
 
     }
 
-    getAuxProjection(commandSeq.!!)
+    commandSeq.!!.split("\n")
   }
 
 

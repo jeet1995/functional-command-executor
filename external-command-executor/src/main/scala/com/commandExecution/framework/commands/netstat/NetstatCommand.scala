@@ -3,7 +3,7 @@ package com.commandExecution.framework.commands.netstat
 import com.commandExecution.framework.commands.grep.GrepCommand
 import com.commandExecution.framework.commands.grep.GrepCommand.Grep.MinGrepCommandForFileType
 import com.commandExecution.framework.commands.netstat.NetstatCommand.Netstat.{MinNetstatCommand, MinNetstatCommandWithPipe, NatuOption}
-import com.commandExecution.framework.schema.NetstatResults
+import com.commandExecution.framework.schema.NetstatResult
 import com.commandExecution.framework.utils.CommandStringBuilder
 
 import scala.collection.mutable
@@ -26,7 +26,7 @@ class NetstatCommand[Netstat <: NetstatCommand.Netstat](commandStrings: Seq[Stri
     new NetstatCommand(commandSeq)
   }
 
-  def executeWithPipe(implicit ev: Netstat <:< MinNetstatCommandWithPipe): ArrayBuffer[NetstatResults] = {
+  def executeWithPipe(implicit ev: Netstat <:< MinNetstatCommandWithPipe): Array[String] = {
 
     var commandSeq: Seq[String] = Seq()
 
@@ -43,11 +43,11 @@ class NetstatCommand[Netstat <: NetstatCommand.Netstat](commandStrings: Seq[Stri
 
     }
 
-    getExecutionProjection(commandSeq.!!)
+    commandSeq.!!.split("\n")
   }
 
 
-  def executeWithNatu(implicit ev: Netstat =:= MinNetstatCommand): ArrayBuffer[NetstatResults] = {
+  def executeWithNatu(implicit ev: Netstat =:= MinNetstatCommand): Array[String] = {
 
     var commandSeq: Seq[String] = Seq()
 
@@ -63,13 +63,13 @@ class NetstatCommand[Netstat <: NetstatCommand.Netstat](commandStrings: Seq[Stri
       commandSeq = "netstat" +: commandStrings
 
     }
-    getExecutionProjection(commandSeq.!!)
+    commandSeq.!!.split("\n")
   }
 
-  def getExecutionProjection(string: String): ArrayBuffer[NetstatResults] = {
+  def getExecutionProjection(string: String): ArrayBuffer[NetstatResult] = {
 
     val strings = string.split("\n")
-    val netstatResults = mutable.ArrayBuffer[NetstatResults]()
+    val netstatResults = mutable.ArrayBuffer[NetstatResult]()
 
     if (strings.length > 2) {
 
@@ -80,7 +80,7 @@ class NetstatCommand[Netstat <: NetstatCommand.Netstat](commandStrings: Seq[Stri
 
             val stringContents = string.split("\\s+")
 
-            netstatResults += NetstatResults(stringContents(0),
+            netstatResults += NetstatResult(stringContents(0),
               stringContents(1),
               stringContents(2),
               stringContents(3),

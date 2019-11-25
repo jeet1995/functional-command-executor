@@ -3,14 +3,14 @@ package com.commandExecution.framework
 import com.commandExecution.framework.commands.cat.CatCommand
 import com.commandExecution.framework.commands.grep.GrepCommand
 import com.commandExecution.framework.commands.grep.GrepCommand.Grep.MinGrepCommandForFileType
-import com.commandExecution.framework.commands.netstat.NetstatCommand
-import com.commandExecution.framework.commands.ps.PsCommand
+import com.commandExecution.framework.commands.netstat.{NetstatCommand, NetstatSchemaUtils}
+import com.commandExecution.framework.commands.ps.{PsCommand, PsSchemaUtils}
 import com.commandExecution.framework.commands.wc.WcCommand
 import com.typesafe.scalalogging.LazyLogging
 
 /**
   * This singleton class represents the driver program for testing the command execution framework.
-  * */
+  **/
 object CommandExecutionDriver extends LazyLogging {
 
   def main(args: Array[String]): Unit = {
@@ -24,7 +24,8 @@ object CommandExecutionDriver extends LazyLogging {
     new PsCommand[PsCommand.Ps]
       .addAuxOption
       .executeWithAux
-      .filter(_.user != "root")
+      .flatMap(PsSchemaUtils.generatePsAuxResult(_))
+      .filter(_.user == "root")
       .foreach(x => logger.info(x.toString))
 
     // Executing the cat files/story.txt command
@@ -53,7 +54,8 @@ object CommandExecutionDriver extends LazyLogging {
     new NetstatCommand[NetstatCommand.Netstat]()
       .addNatuOption
       .executeWithNatu
-      .filter(_.typeMessage == "dgram")
+      .flatMap(NetstatSchemaUtils.generateNetstatResults(_))
+      .filter(_.typeMessage.contains("dgram"))
       .foreach(x => logger.info(x.toString))
 
     // Executing the netstat -natu | grep docker command to check for lines containing `docker`
@@ -61,6 +63,7 @@ object CommandExecutionDriver extends LazyLogging {
       .addNatuOption
       .pipe(new GrepCommand[MinGrepCommandForFileType].addStringToSearch("docker"))
       .executeWithPipe
+      .flatMap(x => NetstatSchemaUtils.generateNetstatResults(x))
       .foreach(x => logger.info(x.toString))
 
 
