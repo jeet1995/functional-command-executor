@@ -25,7 +25,7 @@ object CommandExecutionDriver extends LazyLogging {
       .addAuxOption
       .executeWithAux
       .filter(_.user != "root")
-      .foreach(println)
+      .foreach(x => logger.info(x.toString))
 
     // Executing the cat files/story.txt command
     val catCommandResults = new CatCommand[CatCommand.Cat]
@@ -40,7 +40,7 @@ object CommandExecutionDriver extends LazyLogging {
       .addFileType("files/story.txt")
       .execute
 
-    println(grepCommandResults1)
+    logger.info(grepCommandResults1)
 
     // Executing the grep Moto files/story.txt command
     val grepCommandResults2 = new GrepCommand[GrepCommand.Grep]
@@ -54,14 +54,14 @@ object CommandExecutionDriver extends LazyLogging {
       .addNatuOption
       .executeWithNatu
       .filter(_.typeMessage == "dgram")
-      .foreach(println)
+      .foreach(x => logger.info(x.toString))
 
     // Executing the netstat -natu | grep docker command to check for lines containing `docker`
     new NetstatCommand[NetstatCommand.Netstat]()
       .addNatuOption
       .pipe(new GrepCommand[MinGrepCommandForFileType].addStringToSearch("docker"))
       .executeWithPipe
-      .foreach(println)
+      .foreach(x => logger.info(x.toString))
 
 
   }
