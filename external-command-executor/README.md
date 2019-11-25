@@ -49,14 +49,16 @@ new PsCommand[PsCommand.Ps]
    .executeWithPipe
 ````
 
-* Next, we need to display the results of the execution of the `ps` command, so we further compose as below :
+* Next, we need to display the results of the execution of the `ps` command, so we use a monadic combinator `flatMap` to
+ take the string outputs of `ps aux` and map it to `PsAuxResult` as below :
 
 ````
 new PsCommand[PsCommand.Ps]
-   .addAuxOption
-   .executeWithAux
-   .filter(_.user != "root")
-   .foreach(println)
+  .addAuxOption
+  .executeWithAux
+  .flatMap(PsSchemaUtils.generatePsAuxResult(_))
+  .filter(_.user == "root")
+  .foreach(x => logger.info(x.toString))
 ````
 
 #### cat command
@@ -136,16 +138,20 @@ new NetstatCommand[NetstatCommand.Netstat]()
   .pipe(new GrepCommand[MinGrepCommandForFileType].addStringToSearch("docker"))
 ````
 
-* Next, we need to display the results of the execution of the `netstat` command, so we further compose as below :
+* Next, we need to display the results of the execution of the `netstat` command, so we further compose using a flatMap
+ to convert results returned as a `String` and map it to a `NetstatResult` as below :
 
 ````
 new NetstatCommand[NetstatCommand.Netstat]()
   .addNatuOption
-  .executeWithNatu
-  .filter(_.typeMessage == "dgram")
-  .foreach(println)
+  .pipe(new GrepCommand[MinGrepCommandForFileType].addStringToSearch("docker"))
+  .executeWithPipe
+  .flatMap(x => NetstatSchemaUtils.generateNetstatResults(x))
+  .foreach(x => logger.info(x.toString))
 ````
+### Phantom types
 
+* 
 
 ### Results
 
