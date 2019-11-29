@@ -21,7 +21,10 @@ object CommandExecutionDriver extends LazyLogging {
       .pipe(new WcCommand[WcCommand.Wc].addLOption)
       .executeWithPipe
 
+    logger.info("Logging ps aux | wc -l command output")
     logger.info(psCommandResults)
+
+    logger.info("Logging ps aux")
 
     // Executing the ps aux command
     new PsCommand[PsCommand.Ps]
@@ -37,6 +40,8 @@ object CommandExecutionDriver extends LazyLogging {
       .appendFile("story.txt")
       .execute
 
+    logger.info("Logging cat files/story.txt command output")
+
     logger.info(catCommandResults)
 
     // Executing the grep Hello files/story.txt command
@@ -44,6 +49,8 @@ object CommandExecutionDriver extends LazyLogging {
       .addStringToSearch("Hello")
       .addFileType("files/story.txt")
       .execute
+
+    logger.info("Logging grep Hello files/story.txt command output")
 
     logger.info(grepCommandResults1)
 
@@ -53,6 +60,7 @@ object CommandExecutionDriver extends LazyLogging {
       .addFileType("files/story.txt")
       .execute
 
+    logger.info("Logging netstat -natu command output")
 
     // Executing the netstat -natu command and then filtering to include datagrams
     new NetstatCommand[NetstatCommand.Netstat]()
@@ -60,6 +68,8 @@ object CommandExecutionDriver extends LazyLogging {
       .executeWithNatu
       .flatMap(NetstatSchemaUtils.generateNetstatResults(_))
       .foreach(x => logger.info(x.toString))
+
+    logger.info("Logging netstat -natu | grep docker command output")
 
     // Executing the netstat -natu | grep docker command to check for lines containing `docker`
     new NetstatCommand[NetstatCommand.Netstat]()
@@ -74,6 +84,8 @@ object CommandExecutionDriver extends LazyLogging {
       .appendPath("files")
       .appendFile("story.txt")
       .execute
+
+    logger.info("Logging wc -l files/story.txt command output")
 
     logger.info(wcCommandResults)
 
