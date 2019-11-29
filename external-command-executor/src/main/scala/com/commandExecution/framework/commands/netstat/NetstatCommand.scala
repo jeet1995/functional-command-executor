@@ -1,22 +1,34 @@
 package com.commandExecution.framework.commands.netstat
 
 import com.commandExecution.framework.commands.grep.GrepCommand
-import com.commandExecution.framework.commands.grep.GrepCommand.Grep.MinGrepCommandForFileType
+import com.commandExecution.framework.commands.grep.GrepCommand.Grep.MinGrepCommandForAddingFile
 import com.commandExecution.framework.commands.netstat.NetstatCommand.Netstat.{MinNetstatCommand, MinNetstatCommandWithPipe, NatuOption}
-import com.commandExecution.framework.schema.NetstatResult
 import com.commandExecution.framework.utils.CommandStringBuilder
 
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 import scala.sys.process._
 
+/**
+  * This class is an encapsulation of some features of the netstat command which displays network statistics.
+  * */
 class NetstatCommand[Netstat <: NetstatCommand.Netstat](commandStrings: Seq[String] = Seq()) {
 
+  /**
+    * This method builds the command string so as to add -natu option to the netstat command.
+    *
+    * @param ev Implicit event variable to check if type is that of NetstatCommand.Netstat
+    * @return An instance of NetstatCommand
+    * */
   def addNatuOption(implicit ev: Netstat =:= NetstatCommand.Netstat): NetstatCommand[Netstat with NatuOption] = {
     new NetstatCommand(commandStrings :+ "-natu")
   }
 
-  def pipe(command: GrepCommand[MinGrepCommandForFileType])(implicit ev: Netstat <:< MinNetstatCommand): NetstatCommand[MinNetstatCommandWithPipe] = {
+  /**
+    * This method builds the command string so as to add a pipe to netstat -natu command to give netstat -natu | grep [string to be searched] command
+    *
+    * @param ev Implicit event variable to check if invoking type is a subtype of MinNetstatCommand
+    * @return An instance of NetstatCommand
+    * */
+  def pipe(command: GrepCommand[MinGrepCommandForAddingFile])(implicit ev: Netstat <:< MinNetstatCommand): NetstatCommand[MinNetstatCommandWithPipe] = {
     var commandSeq: Seq[String] = Seq()
 
     commandSeq = commandStrings
@@ -26,6 +38,12 @@ class NetstatCommand[Netstat <: NetstatCommand.Netstat](commandStrings: Seq[Stri
     new NetstatCommand(commandSeq)
   }
 
+  /**
+    * This method executes netstat -natu | grep [string to be searched] command
+    *
+    * @param ev Implicit event variable to check if invoking type is a subtype of MinNetstatCommand
+    * @return An array of string results.
+    * */
   def executeWithPipe(implicit ev: Netstat <:< MinNetstatCommandWithPipe): Array[String] = {
 
     var commandSeq: Seq[String] = Seq()
@@ -46,7 +64,12 @@ class NetstatCommand[Netstat <: NetstatCommand.Netstat](commandStrings: Seq[Stri
     commandSeq.!!.split("\n")
   }
 
-
+  /**
+    * This method executes the netstat -natu
+    *
+    * @param ev Implicit event variable to check if invoking type is a subtype of MinNetstatCommand
+    * @return An instance of NetstatCommand
+    * */
   def executeWithNatu(implicit ev: Netstat =:= MinNetstatCommand): Array[String] = {
 
     var commandSeq: Seq[String] = Seq()
@@ -65,39 +88,12 @@ class NetstatCommand[Netstat <: NetstatCommand.Netstat](commandStrings: Seq[Stri
     }
     commandSeq.!!.split("\n")
   }
-
-  def getExecutionProjection(string: String): ArrayBuffer[NetstatResult] = {
-
-    val strings = string.split("\n")
-    val netstatResults = mutable.ArrayBuffer[NetstatResult]()
-
-    if (strings.length > 2) {
-
-      strings.foreach {
-        string =>
-
-          if (!string.contains("Address") && !string.contains("Active")) {
-
-            val stringContents = string.split("\\s+")
-
-            netstatResults += NetstatResult(stringContents(0),
-              stringContents(1),
-              stringContents(2),
-              stringContents(3),
-              stringContents(4),
-              stringContents(5),
-              stringContents(6),
-              stringContents(7),
-              if (stringContents.length < 9) "" else stringContents(8))
-
-          }
-      }
-    }
-    netstatResults
-  }
-
 }
 
+/**
+  * This companion object creates traits which are used to define type aliases which in turn help in type
+  * checking when composing methods that can be called on an instance of NetstatCommand
+  * */
 object NetstatCommand {
 
   sealed trait Netstat

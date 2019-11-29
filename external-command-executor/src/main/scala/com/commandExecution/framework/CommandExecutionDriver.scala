@@ -2,7 +2,7 @@ package com.commandExecution.framework
 
 import com.commandExecution.framework.commands.cat.CatCommand
 import com.commandExecution.framework.commands.grep.GrepCommand
-import com.commandExecution.framework.commands.grep.GrepCommand.Grep.MinGrepCommandForFileType
+import com.commandExecution.framework.commands.grep.GrepCommand.Grep.MinGrepCommandForAddingFile
 import com.commandExecution.framework.commands.netstat.{NetstatCommand, NetstatSchemaUtils}
 import com.commandExecution.framework.commands.ps.{PsCommand, PsSchemaUtils}
 import com.commandExecution.framework.commands.wc.WcCommand
@@ -16,9 +16,12 @@ object CommandExecutionDriver extends LazyLogging {
   def main(args: Array[String]): Unit = {
 
     // Executing the ps | wc -l command
-    new PsCommand[PsCommand.Ps]
+    val psCommandResults = new PsCommand[PsCommand.Ps]
+      .addAuxOption
       .pipe(new WcCommand[WcCommand.Wc].addLOption)
       .executeWithPipe
+
+    logger.info(psCommandResults)
 
     // Executing the ps aux command
     new PsCommand[PsCommand.Ps]
@@ -33,7 +36,8 @@ object CommandExecutionDriver extends LazyLogging {
       .appendPath("files")
       .appendFile("story.txt")
       .execute
-      .get
+
+    logger.info(catCommandResults)
 
     // Executing the grep Hello files/story.txt command
     val grepCommandResults1 = new GrepCommand[GrepCommand.Grep]
@@ -55,17 +59,23 @@ object CommandExecutionDriver extends LazyLogging {
       .addNatuOption
       .executeWithNatu
       .flatMap(NetstatSchemaUtils.generateNetstatResults(_))
-      .filter(_.typeMessage.contains("dgram"))
       .foreach(x => logger.info(x.toString))
 
     // Executing the netstat -natu | grep docker command to check for lines containing `docker`
     new NetstatCommand[NetstatCommand.Netstat]()
       .addNatuOption
-      .pipe(new GrepCommand[MinGrepCommandForFileType].addStringToSearch("docker"))
+      .pipe(new GrepCommand[MinGrepCommandForAddingFile].addStringToSearch("docker"))
       .executeWithPipe
       .flatMap(x => NetstatSchemaUtils.generateNetstatResults(x))
       .foreach(x => logger.info(x.toString))
 
+    val wcCommandResults = new WcCommand[WcCommand.Wc]()
+      .addLOption
+      .appendPath("files")
+      .appendFile("story.txt")
+      .execute
+
+    logger.info(wcCommandResults)
 
   }
 

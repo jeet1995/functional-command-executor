@@ -2,20 +2,33 @@ package com.commandExecution.framework.commands.ps
 
 import com.commandExecution.framework.commands.ps.PsCommand.Ps._
 import com.commandExecution.framework.commands.wc.WcCommand
-import com.commandExecution.framework.commands.wc.WcCommand.Wc.MinWcCommand
-import com.commandExecution.framework.schema.PsAuxResult
+import com.commandExecution.framework.commands.wc.WcCommand.Wc.MinWcCommandForPipe
 import com.commandExecution.framework.utils.CommandStringBuilder
 
-import scala.collection.mutable
-import scala.collection.mutable.ArrayBuffer
 import scala.sys.process._
 
+/**
+  * This class is an encapsulation of some features of the ps command which returns a snapshot of the current processes.
+  **/
 class PsCommand[Ps <: PsCommand.Ps](commandStrings: Seq[String] = Seq()) {
 
-  def addAuxOption: PsCommand[Ps with AuxOption] = new PsCommand(commandStrings :+ "aux")
+
+  /**
+    * This method adds the aux option to the ps command
+    *
+    * @return An instance of type PsCommand
+    **/
+  def addAuxOption(): PsCommand[Ps with AuxOption] = new PsCommand(commandStrings :+ "aux")
 
 
-  def pipe(command: WcCommand[MinWcCommand])(implicit ev: Ps <:< MinPsCommand): PsCommand[Ps with Pipe] = {
+  /**
+    * This method adds a word count pipe to the ps command to give the resultant command such as ps aux | wc
+    *
+    * @param command Command of type WcCommand which is to be piped with a subtype of MinPsCommand
+    * @param ev      An implicit event which is a subtype of MinPsCommand
+    * @return An instance of type PsCommand
+    **/
+  def pipe(command: WcCommand[MinWcCommandForPipe])(implicit ev: Ps <:< MinPsCommand): PsCommand[Ps with Pipe] = {
 
     var commandSeq: Seq[String] = Seq()
 
@@ -26,39 +39,13 @@ class PsCommand[Ps <: PsCommand.Ps](commandStrings: Seq[String] = Seq()) {
     new PsCommand(commandSeq)
   }
 
-  def getAuxProjection(string: String) = {
 
-
-    val strings = string.split("\n")
-    val psResults = mutable.ArrayBuffer[PsAuxResult]()
-
-    if (strings.length > 2) {
-
-      strings.foreach {
-        string =>
-
-          if (!string.contains("USER")) {
-
-            val stringContents = string.split("\\s+")
-
-            psResults += PsAuxResult(stringContents(0),
-              stringContents(1).toLong,
-              stringContents(2).toDouble,
-              stringContents(3).toDouble,
-              stringContents(4).toLong,
-              stringContents(5).toLong,
-              stringContents(6),
-              stringContents(7),
-              stringContents(8),
-              stringContents(9),
-              stringContents(10)
-            )
-          }
-      }
-    }
-    psResults
-  }
-
+  /**
+    * This method executes a ps command with a pipe
+    *
+    * @param ev An implicit event which is a subtype of PsCommandWithPipe
+    * @return The output of the execution of ps aux | wc
+    **/
   def executeWithPipe(implicit ev: Ps <:< PsCommandWithPipe): String = {
 
     var commandSeq: Seq[String] = Seq()
@@ -80,6 +67,12 @@ class PsCommand[Ps <: PsCommand.Ps](commandStrings: Seq[String] = Seq()) {
   }
 
 
+  /**
+    * This method adds a word count pipe to the ps comma
+    *
+    * @param ev An implicit event which is an instance of type PsWithAux
+    * @return The output of the execution of ps aux
+    **/
   def executeWithAux(implicit ev: Ps =:= PsWithAux): Array[String] = {
 
     var commandSeq: Seq[String] = Seq()
@@ -103,6 +96,10 @@ class PsCommand[Ps <: PsCommand.Ps](commandStrings: Seq[String] = Seq()) {
 
 }
 
+/**
+  * This companion object creates traits which are used to define type aliases which in turn help in type
+  * checking when composing methods that can be called on an instance of PsCommand
+  * */
 object PsCommand {
 
   sealed trait Ps
