@@ -6,12 +6,15 @@ import com.commandExecution.framework.commands.grep.GrepCommand.Grep.MinGrepComm
 import com.commandExecution.framework.commands.netstat.{NetstatCommand, NetstatSchemaUtils}
 import com.commandExecution.framework.commands.ps.{PsCommand, PsSchemaUtils}
 import com.commandExecution.framework.commands.wc.WcCommand
+import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 
 /**
   * This singleton class represents the driver program for testing the command execution framework.
   **/
 object CommandExecutionDriver extends LazyLogging {
+
+  val applicationConf = ConfigFactory.load("application.conf").getConfig("application-conf")
 
   def main(args: Array[String]): Unit = {
 
@@ -31,13 +34,13 @@ object CommandExecutionDriver extends LazyLogging {
       .addAuxOption
       .executeWithAux
       .flatMap(PsSchemaUtils.generatePsAuxResult(_))
-      .filter(_.user == "root")
+      .filter(_.user.equalsIgnoreCase(applicationConf.getString("user")))
       .foreach(x => logger.info(x.toString))
 
     // Executing the cat files/story.txt command
     val catCommandResults = new CatCommand[CatCommand.Cat]
-      .appendPath("files")
-      .appendFile("story.txt")
+      .appendPath(applicationConf.getString("file-path"))
+      .appendFile(applicationConf.getString("file"))
       .execute
 
     logger.info("Logging cat files/story.txt command output")
@@ -74,15 +77,15 @@ object CommandExecutionDriver extends LazyLogging {
     // Executing the netstat -natu | grep docker command to check for lines containing `docker`
     new NetstatCommand[NetstatCommand.Netstat]()
       .addNatuOption
-      .pipe(new GrepCommand[MinGrepCommandForAddingFile].addStringToSearch("docker"))
+      .pipe(new GrepCommand[MinGrepCommandForAddingFile].addStringToSearch(applicationConf.getString("string-to-search")))
       .executeWithPipe
       .flatMap(x => NetstatSchemaUtils.generateNetstatResults(x))
       .foreach(x => logger.info(x.toString))
 
     val wcCommandResults = new WcCommand[WcCommand.Wc]()
       .addLOption
-      .appendPath("files")
-      .appendFile("story.txt")
+      .appendPath(applicationConf.getString("file-path"))
+      .appendFile(applicationConf.getString("file"))
       .execute
 
     logger.info("Logging wc -l files/story.txt command output")
