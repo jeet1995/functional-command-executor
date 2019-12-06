@@ -1,0 +1,13 @@
+Hi Abhijeet,
+
+Thanks for your submission, here are a few comments:
+
+1. Good documentation and well commented, clean code.
+2. Implementation is functional. good use of combinators and phantom types.
+3. Good use of logging library.
+4. Your test examples clearly show use of phantom types as well as monadic combinators on command execution.
+
+Grade - 13% 
+
+Regards,
+Mark and Aditya
